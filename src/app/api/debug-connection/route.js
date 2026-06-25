@@ -1,7 +1,21 @@
 import { NextResponse } from 'next/server';
+import dns from 'dns';
+import { promisify } from 'util';
+
+const resolve4Async = promisify(dns.resolve4);
+const resolveServersAsync = promisify(dns.getServers);
 
 export async function GET() {
   const results = {};
+
+  // Test DNS
+  try {
+    results["dns_servers"] = dns.getServers();
+    results["dns_tmdb"] = await resolve4Async("api.themoviedb.org").catch(e => ({ error: e.message }));
+    results["dns_google"] = await resolve4Async("www.google.com").catch(e => ({ error: e.message }));
+  } catch (e) {
+    results["dns_error"] = e.message;
+  }
 
   // Test 1: Google
   try {
@@ -34,3 +48,4 @@ export async function GET() {
 
   return NextResponse.json(results);
 }
+
