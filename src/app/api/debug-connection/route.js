@@ -5,6 +5,8 @@ import { promisify } from 'util';
 const resolve4Async = promisify(dns.resolve4);
 const resolveServersAsync = promisify(dns.getServers);
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const results = {};
 
