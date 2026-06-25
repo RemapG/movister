@@ -665,6 +665,7 @@ export default function MovisterPage() {
                             src={getPlayerUrl()}
                             frameBorder="0"
                             allowFullScreen
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
                             style={{ width: '100%', height: '450px', border: 0, borderRadius: '16px' }}
                           ></iframe>
                         </div>
