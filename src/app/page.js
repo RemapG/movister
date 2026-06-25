@@ -60,6 +60,8 @@ export default function MovisterPage() {
 
       const storedHistory = localStorage.getItem('movister_history');
       if (storedHistory) setHistory(JSON.parse(storedHistory));
+      
+      window.hydrated = true;
     } catch (e) {
       console.error("Error loading localStorage:", e);
     }

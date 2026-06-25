@@ -52,9 +52,40 @@ export default function RootLayout({ children }) {
             div.style.fontWeight = 'bold';
             div.style.fontFamily = 'monospace';
             div.style.whiteSpace = 'pre-wrap';
-            div.innerHTML = '⚠️ UNHANDLED REJECTION:\\n' + (event.reason ? (event.reason.stack || event.reason.message || event.reason) : event);
+            div.style.innerHTML = '⚠️ UNHANDLED REJECTION:\\n' + (event.reason ? (event.reason.stack || event.reason.message || event.reason) : event);
             document.body.appendChild(div);
           };
+          
+          // Hydration warning timeout
+          setTimeout(function() {
+            if (!window.hydrated) {
+              var div = document.createElement('div');
+              div.style.position = 'fixed';
+              div.style.top = '15%';
+              div.style.left = '10%';
+              div.style.width = '80%';
+              div.style.background = '#d35400';
+              div.style.color = '#ffffff';
+              div.style.zIndex = '9999999';
+              div.style.padding = '25px';
+              div.style.fontSize = '18px';
+              div.style.fontWeight = 'bold';
+              div.style.fontFamily = 'sans-serif';
+              div.style.borderRadius = '12px';
+              div.style.boxShadow = '0 15px 30px rgba(0,0,0,0.8)';
+              div.style.textAlign = 'center';
+              div.style.lineHeight = '1.6';
+              div.innerHTML = '⚠️ JavaScript не смог запуститься на вашем ТВ.<br/><br/>' +
+                'Браузер вашего телевизора не смог загрузить или выполнить JS-скрипты Next.js.<br/>' +
+                'Возможная причина: ТВ блокирует сетевые файлы скриптов (например, из-за доверия SSL-сертификату Let\\'s Encrypt) или устарел движок браузера.<br/><br/>' +
+                '<b>Решения:</b><br/>' +
+                '1. Откройте сайт по обычному HTTP (без шифрования):<br/>' +
+                '<span style="color:#f1c40f;font-size:20px;text-decoration:underline;">http://remapg-movister-354f.twc1.net</span><br/>' +
+                '2. Обновите прошивку ТВ в настройках системы.<br/>' +
+                '3. Попробуйте обновить приложение браузера в магазине приложений ТВ.';
+              document.body.appendChild(div);
+            }
+          }, 5000);
         ` }} />
       </head>
       <body>
