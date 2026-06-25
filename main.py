@@ -35,8 +35,16 @@ async def qb_login(client: httpx.AsyncClient) -> httpx.Cookies:
 async def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html", context={})
 
+# Path configurations
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if os.name == 'nt':  # Windows
+    WATCHLIST_PATH = os.path.join(BASE_DIR, "config", "watchlist.json")
+    HISTORY_PATH = os.path.join(BASE_DIR, "config", "history.json")
+else:  # Linux/Docker
+    WATCHLIST_PATH = "/config/watchlist.json"
+    HISTORY_PATH = "/config/history.json"
+
 # Watchlist Helpers
-WATCHLIST_PATH = "/config/watchlist.json"
 
 def read_watchlist() -> list:
     if not os.path.exists(WATCHLIST_PATH):
@@ -275,7 +283,6 @@ async def toggle_watchlist(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 # History Helpers
-HISTORY_PATH = "/config/history.json"
 
 def read_history() -> list:
     if not os.path.exists(HISTORY_PATH):
