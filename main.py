@@ -402,6 +402,33 @@ async def get_public_url():
         logger.error(f"Error reading tunnel log: {e}")
     return {"url": None}
 
+@app.get("/api/debug-connection")
+async def debug_connection():
+    results = {}
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        # Test 1: Google
+        try:
+            r = await client.get("https://www.google.com")
+            results["google"] = {"status": r.status_code, "ok": True}
+        except Exception as e:
+            results["google"] = {"ok": False, "error": str(e), "type": type(e).__name__}
+            
+        # Test 2: HTTPBin (IP check)
+        try:
+            r = await client.get("https://httpbin.org/ip")
+            results["httpbin"] = {"status": r.status_code, "data": r.json(), "ok": True}
+        except Exception as e:
+            results["httpbin"] = {"ok": False, "error": str(e), "type": type(e).__name__}
+            
+        # Test 3: TMDB
+        try:
+            r = await client.get("https://api.themoviedb.org/3/trending/movie/week?api_key=431a8708161bcd1f1fbe7536137e61ed")
+            results["tmdb"] = {"status": r.status_code, "ok": True}
+        except Exception as e:
+            results["tmdb"] = {"ok": False, "error": str(e), "type": type(e).__name__}
+            
+    return results
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 5055))
