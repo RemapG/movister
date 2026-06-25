@@ -43,8 +43,6 @@ export default function MovisterPage() {
   const [modalLoading, setModalLoading] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [currentPlayerEpisode, setCurrentPlayerEpisode] = useState(null); // { season, episode }
-  const [playerSource, setPlayerSource] = useState('collaps'); // 'collaps', 'yohoho'
-  const [blockPopups, setBlockPopups] = useState(true);
 
   // TV Seasons States
   const [activeSeasonsOpen, setActiveSeasonsOpen] = useState({}); // seasonNum -> boolean
@@ -62,30 +60,12 @@ export default function MovisterPage() {
 
       const storedHistory = localStorage.getItem('movister_history');
       if (storedHistory) setHistory(JSON.parse(storedHistory));
-
-      const storedPlayerSource = localStorage.getItem('movister_player_source');
-      if (storedPlayerSource) setPlayerSource(storedPlayerSource);
-
-      const storedBlockPopups = localStorage.getItem('movister_block_popups');
-      if (storedBlockPopups !== null) {
-        setBlockPopups(storedBlockPopups === 'true');
-      }
       
       window.hydrated = true;
     } catch (e) {
       console.error("Error loading localStorage:", e);
     }
   }, []);
-
-  const handlePlayerSourceChange = (source) => {
-    setPlayerSource(source);
-    localStorage.setItem('movister_player_source', source);
-  };
-
-  const handleBlockPopupsChange = (val) => {
-    setBlockPopups(val);
-    localStorage.setItem('movister_block_popups', val.toString());
-  };
 
   // Sync Watchlist to localStorage on change
   const updateWatchlistState = (updatedList) => {
@@ -391,8 +371,8 @@ export default function MovisterPage() {
     const episode = currentPlayerEpisode?.episode;
 
     let url = "";
-    if (playerSource === 'collaps' && imdbId) {
-      url = `https://api.namy.ws/embed/imdb/${imdbId}`;
+    if (imdbId) {
+      url = `/api/player/${imdbId}`;
       if (season && episode) {
         url += `?season=${season}&episode=${episode}`;
       }
@@ -675,81 +655,19 @@ export default function MovisterPage() {
                     {/* Online Player Section */}
                     {showPlayer && (
                       <div id="online-player-container" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-                          <h3 className="torrents-title" style={{ margin: 0 }}>
-                            <i className="fa-solid fa-circle-play"></i> Онлайн-просмотр 
-                            {currentPlayerEpisode && ` (Сезон ${currentPlayerEpisode.season}, Серия ${currentPlayerEpisode.episode})`}
-                          </h3>
-                          
-                          {/* Player Settings Panel */}
-                          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', fontSize: '0.85rem', flexWrap: 'wrap' }}>
-                            {/* Player Source Selector */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ color: 'var(--text-muted)' }}>Источник:</span>
-                              <select 
-                                value={playerSource} 
-                                onChange={(e) => handlePlayerSourceChange(e.target.value)}
-                                style={{
-                                  backgroundColor: 'var(--bg-tertiary)',
-                                  border: '1px solid var(--border-color)',
-                                  color: 'var(--text-main)',
-                                  padding: '4px 10px',
-                                  borderRadius: '8px',
-                                  outline: 'none',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                <option value="collaps">Collaps (Рекомендуется)</option>
-                                <option value="yohoho">Yohoho (Резервный мультиплеер)</option>
-                              </select>
-                            </div>
-                            
-                            {/* Anti-ad Toggle */}
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-                              <input 
-                                type="checkbox" 
-                                checked={blockPopups} 
-                                onChange={(e) => handleBlockPopupsChange(e.target.checked)}
-                                style={{
-                                  cursor: 'pointer',
-                                  accentColor: 'var(--accent-primary)',
-                                  width: '16px',
-                                  height: '16px'
-                                }}
-                              />
-                              <span style={{ color: 'var(--text-main)' }}>Блокировать всплывающую рекламу (для ТВ)</span>
-                            </label>
-                          </div>
-                        </div>
-
-                        {/* Sandbox Notice Banner */}
-                        {blockPopups && (
-                          <div style={{
-                            backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                            border: '1px solid rgba(16, 185, 129, 0.2)',
-                            color: '#10b981',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px'
-                          }}>
-                            <i className="fa-solid fa-shield-halved"></i>
-                            <span>Защита от всплывающих окон активна. Если плеер не загружается, снимите галочку блокировки.</span>
-                          </div>
-                        )}
-
+                        <h3 className="torrents-title" style={{ marginBottom: '1rem' }}>
+                          <i className="fa-solid fa-circle-play"></i> Онлайн-просмотр 
+                          {currentPlayerEpisode && ` (Сезон ${currentPlayerEpisode.season}, Серия ${currentPlayerEpisode.episode})`}
+                        </h3>
                         <div id="yohoho-player" style={{ width: '100%', minHeight: '450px', backgroundColor: '#0b0e14', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                           <iframe 
                             id="yohoho-iframe-direct"
-                            key={`${playerSource}-${blockPopups}-${currentPlayerEpisode?.season}-${currentPlayerEpisode?.episode}`}
+                            key={`${currentPlayerEpisode?.season}-${currentPlayerEpisode?.episode}`}
                             src={getPlayerUrl()}
                             frameBorder="0"
                             allowFullScreen
                             allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
-                            {...(blockPopups ? { sandbox: "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-presentation" } : {})}
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-presentation"
                             style={{ width: '100%', height: '450px', border: 0, borderRadius: '16px' }}
                           ></iframe>
                         </div>
