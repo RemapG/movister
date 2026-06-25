@@ -33,7 +33,7 @@ async def qb_login(client: httpx.AsyncClient) -> httpx.Cookies:
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={})
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # Path configurations
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
