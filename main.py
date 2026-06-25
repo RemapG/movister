@@ -39,12 +39,17 @@ async def read_root(request: Request):
 
 # Path configurations
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if os.name == 'nt':  # Windows
+config_dir = "/config"
+try:
+    if os.name != 'nt' and (os.path.exists(config_dir) or os.access("/", os.W_OK)):
+        WATCHLIST_PATH = "/config/watchlist.json"
+        HISTORY_PATH = "/config/history.json"
+    else:
+        WATCHLIST_PATH = os.path.join(BASE_DIR, "config", "watchlist.json")
+        HISTORY_PATH = os.path.join(BASE_DIR, "config", "history.json")
+except Exception:
     WATCHLIST_PATH = os.path.join(BASE_DIR, "config", "watchlist.json")
     HISTORY_PATH = os.path.join(BASE_DIR, "config", "history.json")
-else:  # Linux/Docker
-    WATCHLIST_PATH = "/config/watchlist.json"
-    HISTORY_PATH = "/config/history.json"
 
 # Watchlist Helpers
 
@@ -440,5 +445,5 @@ async def debug_connection():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 5055))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Force port 5055 to match EXPOSE 5055 in Dockerfile and avoid routing mismatch on Timeweb
+    uvicorn.run(app, host="0.0.0.0", port=5055)
