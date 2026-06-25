@@ -254,21 +254,60 @@
 
                             <!-- Online Player Section -->
                             <div v-if="showPlayer" id="online-player-container" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 0.5rem;">
-                                <h3 class="torrents-title" style="margin-bottom: 1rem;">
-                                    <i class="fa-solid fa-circle-play"></i> Онлайн-просмотр 
-                                    <span v-if="currentPlayerEpisode"> (Сезон {{ currentPlayerEpisode.season }}, Серия {{ currentPlayerEpisode.episode }})</span>
-                                </h3>
-                                <div id="yohoho-player" style="width: 100%; min-height: 450px; background-color: #0b0e14; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color);">
-                                    <!-- Ad-blocking Sandboxed player iframe -->
-                                    <iframe 
-                                        id="yohoho-iframe-direct"
-                                        :src="getPlayerUrl()"
-                                        frameborder="0"
-                                        allowfullscreen
-                                        style="width: 100%; height: 450px; border: 0; border-radius: 16px;"
-                                    ></iframe>
-                                </div>
-                            </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                                    <h3 class="torrents-title" style="margin: 0;">
+                                        <i class="fa-solid fa-circle-play"></i> Онлайн-просмотр 
+                                        <span v-if="currentPlayerEpisode"> (Сезон {{ currentPlayerEpisode.season }}, Серия {{ currentPlayerEpisode.episode }})</span>
+                                    </h3>
+                                    
+                                    <!-- Player Settings Panel -->
+                                    <div style="display: flex; gap: 1.5rem; align-items: center; font-size: 0.85rem; flex-wrap: wrap;">
+                                        <!-- Player Source Selector -->
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="color: var(--text-muted);">Источник:</span>
+                                             <select 
+                                                 :value="playerSource" 
+                                                 @change="handlePlayerSourceChange($event.target.value)"
+                                                 style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 8px; outline: none; cursor: pointer;"
+                                             >
+                                                 <option value="collaps">Collaps (Рекомендуется)</option>
+                                                 <option value="yohoho">Yohoho (Резервный мультиплеер)</option>
+                                             </select>
+                                         </div>
+                                         
+                                         <!-- Anti-ad Toggle -->
+                                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                                             <input 
+                                                 type="checkbox" 
+                                                 :checked="blockPopups" 
+                                                 @change="handleBlockPopupsChange($event.target.checked)"
+                                                 style="cursor: pointer; accent-color: var(--accent-primary); width: 16px; height: 16px;"
+                                             />
+                                             <span style="color: var(--text-main);">Блокировать всплывающую рекламу (для ТВ)</span>
+                                         </label>
+                                     </div>
+                                 </div>
+
+                                 <!-- Sandbox Notice Banner -->
+                                 <div v-if="blockPopups" style="background-color: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                                     <i class="fa-solid fa-shield-halved"></i>
+                                     <span>Защита от всплывающих окон активна. Если плеер не загружается, снимите галочку блокировки.</span>
+                                 </div>
+
+                                 <div id="yohoho-player" style="width: 100%; min-height: 450px; background-color: #0b0e14; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color);">
+                                     <!-- Ad-blocking Sandboxed player iframe -->
+                                     <iframe 
+                                         id="yohoho-iframe-direct"
+                                         :key="playerSource + '-' + blockPopups + '-' + (currentPlayerEpisode ? currentPlayerEpisode.season + '-' + currentPlayerEpisode.episode : '')"
+                                         :src="getPlayerUrl()"
+                                         frameborder="0"
+                                         allowfullscreen
+                                         allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                         :sandbox="blockPopups ? 'allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-presentation' : null"
+                                         style="width: 100%; height: 450px; border: 0; border-radius: 16px;"
+                                     ></iframe>
+                                 </div>
+                             </div>
 
                             <!-- TV Seasons Sections -->
                             <div v-if="selectedMovie.type === 'tv' && selectedMovieDetail.seasons" id="tv-seasons-container" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-bottom: 1.5rem;">
@@ -385,6 +424,8 @@
                 modalLoading: false,
                 showPlayer: false,
                 currentPlayerEpisode: null,
+                playerSource: 'collaps', // 'collaps', 'yohoho'
+                blockPopups: true,
                 
                 activeSeasonsOpen: {},
                 seasonEpisodes: {},
@@ -419,9 +460,25 @@
 
                         const storedHist = localStorage.getItem('movister_history');
                         if (storedHist) this.history = JSON.parse(storedHist);
+
+                        const storedPlayerSource = localStorage.getItem('movister_player_source');
+                        if (storedPlayerSource) this.playerSource = storedPlayerSource;
+
+                        const storedBlockPopups = localStorage.getItem('movister_block_popups');
+                        if (storedBlockPopups !== null) {
+                            this.blockPopups = storedBlockPopups === 'true';
+                        }
                     } catch (e) {
                         console.error("Local storage error:", e);
                     }
+                },
+                handlePlayerSourceChange: function(source) {
+                    this.playerSource = source;
+                    localStorage.setItem('movister_player_source', source);
+                },
+                handleBlockPopupsChange: function(val) {
+                    this.blockPopups = val;
+                    localStorage.setItem('movister_block_popups', val.toString());
                 },
                 saveWatchlist: function() {
                     localStorage.setItem('movister_watchlist', JSON.stringify(this.watchlist));
@@ -668,7 +725,7 @@
                     const episode = this.currentPlayerEpisode ? this.currentPlayerEpisode.episode : null;
                     
                     let url = "";
-                    if (imdbId) {
+                    if (this.playerSource === 'collaps' && imdbId) {
                         url = `https://api.namy.ws/embed/imdb/${imdbId}`;
                         if (season && episode) {
                             url += `?season=${season}&episode=${episode}`;
