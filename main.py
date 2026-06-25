@@ -31,8 +31,10 @@ async def qb_login(client: httpx.AsyncClient) -> httpx.Cookies:
         return r.cookies
     raise Exception(f"Status {r.status_code}: {r.text}")
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"])
 async def read_root(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
     return templates.TemplateResponse("index.html", {"request": request})
 
 # Path configurations
