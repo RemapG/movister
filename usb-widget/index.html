@@ -262,12 +262,12 @@
                                      <!-- Ad-blocking Sandboxed player iframe -->
                                      <iframe 
                                          id="yohoho-iframe-direct"
-                                         :key="currentPlayerEpisode ? currentPlayerEpisode.season + '-' + currentPlayerEpisode.episode : ''"
+                                         :key="(currentPlayerEpisode ? currentPlayerEpisode.season + '-' + currentPlayerEpisode.episode : '') + '-' + useSandbox"
                                          :src="getPlayerUrl()"
                                          frameborder="0"
                                          allowfullscreen
                                          allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                         sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-presentation"
+                                         :sandbox="useSandbox ? 'allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-presentation' : null"
                                          style="width: 100%; height: 450px; border: 0; border-radius: 16px;"
                                      ></iframe>
                                  </div>
@@ -388,6 +388,7 @@
                 modalLoading: false,
                 showPlayer: false,
                 currentPlayerEpisode: null,
+                useSandbox: true,
                 
                 activeSeasonsOpen: {},
                 seasonEpisodes: {},
@@ -412,6 +413,7 @@
             },
             created: function() {
                 this.loadLocalStorage();
+                this.detectDeviceSandbox();
                 this.fetchCatalog(true, 1);
             },
             methods: {
@@ -425,6 +427,12 @@
                     } catch (e) {
                         console.error("Local storage error:", e);
                     }
+                },
+                detectDeviceSandbox: function() {
+                    const ua = navigator.userAgent.toLowerCase();
+                    const isTv = /tv|smart|tizen|webos|netcast|opera\s+tv|appletv|viera|philips|googletv|playstation|xbox/i.test(ua);
+                    const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera\s+mini/i.test(ua);
+                    this.useSandbox = (isTv || isMobile);
                 },
                 saveWatchlist: function() {
                     localStorage.setItem('movister_watchlist', JSON.stringify(this.watchlist));
@@ -672,7 +680,7 @@
                     
                     let url = "";
                     if (imdbId) {
-                        url = `${this.API_URL}/api/player/${imdbId}`;
+                        url = `https://api.namy.ws/embed/imdb/${imdbId}`;
                         if (season && episode) {
                             url += `?season=${season}&episode=${episode}`;
                         }

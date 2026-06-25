@@ -43,6 +43,7 @@ export default function MovisterPage() {
   const [modalLoading, setModalLoading] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [currentPlayerEpisode, setCurrentPlayerEpisode] = useState(null); // { season, episode }
+  const [useSandbox, setUseSandbox] = useState(true);
 
   // TV Seasons States
   const [activeSeasonsOpen, setActiveSeasonsOpen] = useState({}); // seasonNum -> boolean
@@ -60,6 +61,12 @@ export default function MovisterPage() {
 
       const storedHistory = localStorage.getItem('movister_history');
       if (storedHistory) setHistory(JSON.parse(storedHistory));
+      
+      // Smart device detection for ad blocking sandbox
+      const ua = navigator.userAgent.toLowerCase();
+      const isTv = /tv|smart|tizen|webos|netcast|opera\s+tv|appletv|viera|philips|googletv|playstation|xbox/i.test(ua);
+      const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera\s+mini/i.test(ua);
+      setUseSandbox(isTv || isMobile);
       
       window.hydrated = true;
     } catch (e) {
@@ -372,7 +379,7 @@ export default function MovisterPage() {
 
     let url = "";
     if (imdbId) {
-      url = `/api/player/${imdbId}`;
+      url = `https://api.namy.ws/embed/imdb/${imdbId}`;
       if (season && episode) {
         url += `?season=${season}&episode=${episode}`;
       }
@@ -662,12 +669,12 @@ export default function MovisterPage() {
                         <div id="yohoho-player" style={{ width: '100%', minHeight: '450px', backgroundColor: '#0b0e14', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                           <iframe 
                             id="yohoho-iframe-direct"
-                            key={`${currentPlayerEpisode?.season}-${currentPlayerEpisode?.episode}`}
+                            key={`${currentPlayerEpisode?.season}-${currentPlayerEpisode?.episode}-${useSandbox}`}
                             src={getPlayerUrl()}
                             frameBorder="0"
                             allowFullScreen
                             allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
-                            sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-presentation"
+                            {...(useSandbox ? { sandbox: "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-presentation" } : {})}
                             style={{ width: '100%', height: '450px', border: 0, borderRadius: '16px' }}
                           ></iframe>
                         </div>
