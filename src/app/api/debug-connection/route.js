@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import '../../../lib/dns-init';
 import dns from 'dns';
 import { promisify } from 'util';
 

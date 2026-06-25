@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import '../../../lib/dns-init';
 
 const TMDB_API_KEY = "431a8708161bcd1f1fbe7536137e61ed";
 
